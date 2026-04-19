@@ -10,19 +10,22 @@ export default function Message({ role, content, sql }) {
   useEffect(() => {
     if (role === "assistant") {
       let i = 0;
+      const text = content || ""; // ✅ prevent crash
+
       const interval = setInterval(() => {
-        setDisplayed(content.slice(0, i));
+        setDisplayed(text.slice(0, i));
         i++;
-        if (i > content.length) clearInterval(interval);
+        if (i > text.length) clearInterval(interval);
       }, 20);
 
       return () => clearInterval(interval);
     } else {
-      setDisplayed(content);
+      setDisplayed(content || ""); // ✅ safe fallback
     }
-  }, [content,role]);
+  }, [content, role]);
 
   const copyToClipboard = () => {
+    if (!sql) return; // ✅ prevent copying undefined
     navigator.clipboard.writeText(sql);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
@@ -36,19 +39,20 @@ export default function Message({ role, content, sql }) {
       <div className={`flip-card ${flipped ? "flipped" : ""}`}>
         <div className="flip-inner">
 
-          {/* FRONT */}
+          {/* FRONT → Answer */}
           <div className="flip-front bubble">
             {displayed}
           </div>
 
-          {/* BACK */}
-          <div className="flip-back bubble sql-box" onClick={(e) => e.stopPropagation()}>
-            
-            {/* Header */}
+          {/* BACK → SQL */}
+          <div
+            className="flip-back bubble sql-box"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="sql-header">
               <span>SQL</span>
               <div className="sql-actions">
-                <button onClick={copyToClipboard}>
+                <button onClick={copyToClipboard} disabled={!sql}>
                   {copied ? "Copied!" : "Copy"}
                 </button>
                 <button onClick={() => setFlipped(false)}>
@@ -57,18 +61,24 @@ export default function Message({ role, content, sql }) {
               </div>
             </div>
 
-            {/* Code */}
-            <SyntaxHighlighter
-              language="sql"
-              style={vscDarkPlus}
-              customStyle={{
-                margin: 0,
-                background: "transparent",
-                fontSize: "13px"
-              }}
-            >
-              {sql}
-            </SyntaxHighlighter>
+            {/* ✅ Only render if SQL exists */}
+            {sql ? (
+              <SyntaxHighlighter
+                language="sql"
+                style={vscDarkPlus}
+                customStyle={{
+                  margin: 0,
+                  background: "transparent",
+                  fontSize: "13px"
+                }}
+              >
+                {sql}
+              </SyntaxHighlighter>
+            ) : (
+              <div style={{ fontSize: "12px", color: "#aaa" }}>
+                No SQL available
+              </div>
+            )}
 
           </div>
 

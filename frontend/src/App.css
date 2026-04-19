@@ -182,3 +182,26 @@ body {
 .sql-header button:hover {
   background: #3a3b42;
 } 
+
+.new-chat {
+  margin: 10px;
+  padding: 8px;
+  background: #343541;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.session-item {
+  padding: 8px;
+  margin: 5px 10px;
+  background: #2a2b32;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.session-item:hover {
+  background: #3a3b42;
+}

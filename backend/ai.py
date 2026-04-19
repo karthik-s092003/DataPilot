@@ -53,15 +53,27 @@ async def generate_sql(question, schema, history):
     result = await assistant.run(task="generate an SQL query to answer the question based on the given database schema")
 
     content = result.messages[-1].content
-    print(content)
+    print("RAW LLM OUTPUT:", content)
 
     await groq_model_client.close()
 
+    # Case 1: already dict
+    if isinstance(content, dict):
+        return content.get("sql", "")
+
+    # Case 2: Pydantic object
+    if hasattr(content, "sql"):
+        return content.sql
+
+    # Case 3: string JSON
     try:
         parsed = json.loads(content)
         return parsed.get("sql", content)
     except:
-        return content
+        pass
+
+    # Case 4: raw SQL string
+    return content.strip()
 
 
 
