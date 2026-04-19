@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import Sidebar from "../components/Sidebar";
 import ChatWindow from "../components/ChatWindow";
 import InputBox from "../components/InputBox";
+import LoginModal from "../components/LoginModal";
 
 export default function Home() {
   const [collapsed, setCollapsed] = useState(false);
@@ -13,10 +14,15 @@ export default function Home() {
   const [sessionId, setSessionId] = useState("");
   const [sessions, setSessions] = useState([]);
 
-  // =========================
-  // INIT SESSION
-  // =========================
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      setIsLoggedIn(true);
+    }
+
     let id = localStorage.getItem("session_id");
 
     if (!id) {
@@ -25,34 +31,47 @@ export default function Home() {
     }
 
     setSessionId(id);
-    fetchSessions();
+
+    if (token) fetchSessions(token);
   }, []);
 
-  // =========================
-  // FETCH ALL SESSIONS
-  // =========================
-  const fetchSessions = async () => {
-    const res = await fetch("http://localhost:8000/sessions");
+  const getAuthHeader = () => ({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+  });
+
+  const fetchSessions = async (tokenParam) => {
+    const token = tokenParam || localStorage.getItem("token");
+
+    const res = await fetch("http://localhost:8000/sessions", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
     const data = await res.json();
-    setSessions(data);
+
+   
+    if (Array.isArray(data)) {
+      setSessions(data);
+    } else {
+      console.error("Invalid sessions response:", data);
+      setSessions([]); // prevent crash
+    }
   };
 
-  // =========================
-  // LOAD OLD SESSION
-  // =========================
   const loadSession = async (id) => {
-    const res = await fetch(`http://localhost:8000/sessions/${id}`);
+    const res = await fetch(`http://localhost:8000/sessions/${id}`, {
+      headers: getAuthHeader(),
+    });
+
     const data = await res.json();
 
     setSessionId(id);
     localStorage.setItem("session_id", id);
-
     setMessages(data);
   };
 
-  // =========================
-  // NEW CHAT
-  // =========================
   const newChat = () => {
     const id = uuidv4();
     setSessionId(id);
@@ -60,9 +79,6 @@ export default function Home() {
     setMessages([]);
   };
 
-  // =========================
-  // SEND MESSAGE
-  // =========================
   const sendMessage = async (text) => {
     const userMsg = { role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
@@ -72,10 +88,10 @@ export default function Home() {
     try {
       const res = await fetch("http://localhost:8000/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeader(),
         body: JSON.stringify({
           question: text,
-          session_id: sessionId
+          session_id: sessionId,
         }),
       });
 
@@ -84,14 +100,12 @@ export default function Home() {
       const botMsg = {
         role: "assistant",
         content: data.answer,
-        sql: data.sql
+        sql: data.sql,
       };
 
       setMessages((prev) => [...prev, botMsg]);
 
-      // refresh sidebar after new message
       fetchSessions();
-
     } catch (err) {
       console.error(err);
     }
@@ -101,6 +115,16 @@ export default function Home() {
 
   return (
     <div className="app">
+      {!isLoggedIn && (
+        <LoginModal
+          onLogin={(token) => {
+            localStorage.setItem("token", token);
+            setIsLoggedIn(true);
+            fetchSessions(token);
+          }}
+        />
+      )}
+
       <Sidebar
         collapsed={collapsed}
         setCollapsed={setCollapsed}

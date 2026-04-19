@@ -1,4 +1,4 @@
-import { PanelLeft, Database } from "lucide-react";
+import { PanelLeft, Database, LogOut } from "lucide-react";
 
 export default function Sidebar({
   collapsed,
@@ -7,14 +7,20 @@ export default function Sidebar({
   loadSession,
   newChat,
 }) {
+  const email = localStorage.getItem("user_email");
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user_email");
+    window.location.reload();
+  };
+
   return (
     <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
 
       {/* Header */}
       <div className="sidebar-header">
         <div className="logo-section" onClick={() => setCollapsed(!collapsed)}>
-          
-          {/* Collapsed Logo */}
           {collapsed ? (
             <Database size={22} />
           ) : (
@@ -25,12 +31,8 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Collapse Button */}
         {!collapsed && (
-          <button
-            className="collapse-btn"
-            onClick={() => setCollapsed(true)}
-          >
+          <button className="collapse-btn" onClick={() => setCollapsed(true)}>
             <PanelLeft size={18} />
           </button>
         )}
@@ -55,6 +57,26 @@ export default function Sidebar({
               {s.session_id.slice(0, 8)}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* USER SECTION (BOTTOM) */}
+      {!collapsed && (
+        <div className="user-section">
+          <div className="user-info">
+            <div className="avatar">
+              {email ? email[0].toUpperCase() : "U"}
+            </div>
+            <div>
+              <div className="user-email">{email}</div>
+              <div className="user-plan">Free</div>
+            </div>
+          </div>
+
+          <button className="logout-btn" onClick={handleLogout}>
+            <LogOut size={14} />
+            Logout
+          </button>
         </div>
       )}
     </div>
