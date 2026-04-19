@@ -38,7 +38,7 @@ export default function Home() {
 
         const data = await res.json();
 
-        const botMsg = { role: "assistant", content: data.answer };
+        const botMsg = { role: "assistant", content: data.answer,sql: data.sql };
         setMessages((prev) => [...prev, botMsg]);
     } catch (err) {
         console.error(err);
