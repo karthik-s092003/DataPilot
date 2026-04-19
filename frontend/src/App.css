@@ -4,52 +4,135 @@
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #141414;
+  color: #e5e5e5;
 }
 
+/* =========================
+   APP LAYOUT
+========================= */
 .app {
   display: flex;
   height: 100vh;
-  background: #343541;
-  color: white;
 }
 
-/* Sidebar */
+/* =========================
+   SIDEBAR (DARKEST)
+========================= */
 .sidebar {
-  background: #202123;
+  background: #0d0d0d;
   width: 260px;
-  padding: 10px;
-  transition: 0.3s;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.25s ease;
+  border-right: 1px solid #1f1f1f;
 }
 
 .sidebar.collapsed {
   width: 60px;
 }
 
-.logo {
-  margin-top: 20px;
-  font-weight: bold;
+/* Header */
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
-/* Main Layout */
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.logo-text {
+  letter-spacing: 0.5px;
+}
+
+/* Collapse button */
+.collapse-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+}
+
+.collapse-btn:hover {
+  color: white;
+}
+
+/* New Chat */
+.new-chat {
+  background: #1a1a1a;
+  border: 1px solid #2f2f2f;
+  color: #e5e5e5;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 14px;
+  transition: 0.2s;
+}
+
+.new-chat:hover {
+  background: #222;
+}
+
+/* Sessions */
+.session-item {
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #aaa;
+  transition: 0.2s;
+}
+
+.session-item:hover {
+  background: #1f1f1f;
+  color: white;
+}
+
+/* =========================
+   MAIN (CHAT AREA)
+========================= */
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
+  background: #141414;
 }
 
-/* Chat Window */
+/* =========================
+   CHAT WINDOW (MID SHADE)
+========================= */
 .chat-window {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden; /* FIXED */
-  padding: 20px;
+  padding: 30px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #141414;
 }
 
-/* Messages */
+/* Center content */
+.chat-window > * {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* =========================
+   MESSAGES
+========================= */
 .message {
   display: flex;
-  margin-bottom: 10px;
   width: 100%;
 }
 
@@ -61,60 +144,79 @@ body {
   justify-content: flex-start;
 }
 
-/* Chat Bubble */
+/* =========================
+   BUBBLES (LIGHTER SHADES)
+========================= */
 .bubble {
-  background: #444654;
-  padding: 10px 14px;
-  border-radius: 10px;
-  max-width: 70%;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+  padding: 14px 16px;
+  border-radius: 14px;
+  max-width: 75%;
+  line-height: 1.6;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid #2a2a2a;
 }
 
+/* Assistant bubble */
+.message.assistant .bubble {
+  background: #1f1f1f;
+  color: #e5e5e5;
+}
+
+/* User bubble */
 .message.user .bubble {
-  background: #10a37f;
+  background: #2a2a2a;
+  color: #ffffff;
 }
 
-/* Input */
+/* =========================
+   INPUT BOX
+========================= */
 .input-box {
   display: flex;
-  padding: 10px;
-  background: #40414f;
+  padding: 14px;
+  background: #0d0d0d;
+  border-top: 1px solid #1f1f1f;
 }
 
 .input-box input {
   flex: 1;
-  padding: 10px;
-  border: none;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #2a2a2a;
   outline: none;
-  background: transparent;
+  background: #141414;
   color: white;
+  font-size: 14px;
 }
 
 .input-box button {
-  background: none;
+  margin-left: 10px;
+  background: #2a2a2a;
   border: none;
   color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
   cursor: pointer;
+  transition: 0.2s;
 }
 
-/* Typing indicator */
-.typing {
-  opacity: 0.7;
-  font-style: italic;
+.input-box button:hover {
+  background: #3a3a3a;
 }
 
-/* Flip Card */
+/* =========================
+   FLIP CARD
+========================= */
 .flip-card {
   perspective: 1000px;
-  max-width: 70%;
-  width: fit-content;
+  max-width: 75%;
 }
 
 .flip-inner {
   position: relative;
-  width: 100%;
-  transition: transform 0.6s;
+  transition: transform 0.5s;
   transform-style: preserve-3d;
 }
 
@@ -124,35 +226,22 @@ body {
 
 .flip-front,
 .flip-back {
-  position: relative; /* FIXED */
   width: 100%;
   backface-visibility: hidden;
 }
 
-.flip-front {
-  background: #444654;
-  border-radius: 10px;
-  padding: 10px 14px;
-}
-
 .flip-back {
-  background: #1e1f25;
   transform: rotateY(180deg);
-  border-radius: 10px;
-  padding: 10px 14px;
 }
 
-.flip-back pre {
-  margin: 0;
-  white-space: pre-wrap;
-  font-size: 12px;
-}
-
-
+/* =========================
+   SQL BOX (SLIGHTLY LIGHTER)
+========================= */
 .sql-box {
-  background: #1e1f25;
-  padding: 10px;
+  background: #181818;
+  padding: 12px;
   border-radius: 10px;
+  border: 1px solid #2f2f2f;
 }
 
 .sql-header {
@@ -161,47 +250,30 @@ body {
   align-items: center;
   margin-bottom: 8px;
   font-size: 12px;
-  color: #aaa;
-}
-
-.sql-actions {
-  display: flex;
-  gap: 6px;
+  color: #888;
 }
 
 .sql-header button {
-  background: #2a2b32;
+  background: #2a2a2a;
   border: none;
   color: white;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 12px;
 }
 
 .sql-header button:hover {
-  background: #3a3b42;
-} 
-
-.new-chat {
-  margin: 10px;
-  padding: 8px;
-  background: #343541;
-  border: none;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
+  background: #3a3a3a;
 }
 
-.session-item {
-  padding: 8px;
-  margin: 5px 10px;
-  background: #2a2b32;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
+/* =========================
+   SCROLLBAR (MINIMAL)
+========================= */
+.chat-window::-webkit-scrollbar {
+  width: 6px;
 }
 
-.session-item:hover {
-  background: #3a3b42;
+.chat-window::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 10px;
 }

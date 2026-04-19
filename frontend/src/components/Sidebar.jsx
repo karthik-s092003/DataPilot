@@ -1,11 +1,40 @@
-export default function Sidebar({ collapsed, setCollapsed, sessions, loadSession, newChat }) {
+import { PanelLeft, Database } from "lucide-react";
+
+export default function Sidebar({
+  collapsed,
+  setCollapsed,
+  sessions,
+  loadSession,
+  newChat,
+}) {
   return (
     <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
-      
-      {/* Toggle */}
-      <button onClick={() => setCollapsed(!collapsed)}>
-        ☰
-      </button>
+
+      {/* Header */}
+      <div className="sidebar-header">
+        <div className="logo-section" onClick={() => setCollapsed(!collapsed)}>
+          
+          {/* Collapsed Logo */}
+          {collapsed ? (
+            <Database size={22} />
+          ) : (
+            <>
+              <Database size={20} />
+              <span className="logo-text">DataPilot</span>
+            </>
+          )}
+        </div>
+
+        {/* Collapse Button */}
+        {!collapsed && (
+          <button
+            className="collapse-btn"
+            onClick={() => setCollapsed(true)}
+          >
+            <PanelLeft size={18} />
+          </button>
+        )}
+      </div>
 
       {/* New Chat */}
       {!collapsed && (

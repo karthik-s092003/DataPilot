@@ -81,7 +81,7 @@ async def chat(req: QueryRequest):
 def sessions():
     return get_sessions()
 
-
+ 
 @app.get("/sessions/{session_id}")
 def session_messages(session_id: str):
     return get_messages(session_id)
