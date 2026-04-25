@@ -391,3 +391,7 @@ body {
 .logout-btn:hover {
   background: #2a2a2a;
 }
+
+.login-box button {
+  margin-top: 8px;
+}

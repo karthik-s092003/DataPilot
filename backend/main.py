@@ -1,13 +1,22 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
+from sqlalchemy import text, create_engine
+from sqlalchemy.exc import SQLAlchemyError
 
 from schema import fetch_schema
 from ai import generate_sql, generate_answer
-from db import engine, app_engine
+from db import app_engine
 
-from memory import create_session, save_message, get_sessions, get_messages
+from memory import (
+    create_session,
+    save_message,
+    get_sessions,
+    get_messages,
+    save_db_connection,
+    get_db_connection
+)
+
 from auth import create_token
 from auth_dependency import get_current_user
 
@@ -33,6 +42,13 @@ class QueryRequest(BaseModel):
 class AuthRequest(BaseModel):
     email: str
     password: str
+
+
+class DBConfig(BaseModel):
+    host: str = "localhost"
+    username: str
+    password: str
+    database: str
 
 
 # =========================
@@ -78,15 +94,54 @@ def login(req: AuthRequest):
             SELECT id, password FROM users WHERE email = :email
         """), {"email": req.email}).fetchone()
 
-        if not user:
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-
-        if user._mapping["password"] != req.password:
+        if not user or user._mapping["password"] != req.password:
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
         token = create_token(user._mapping["id"])
 
         return {"token": token}
+
+
+# =========================
+# DB CONNECTION APIs
+# =========================
+@app.post("/test-db")
+def test_db(config: DBConfig, user_id: int = Depends(get_current_user)):
+    try:
+        url = f"mysql+pymysql://{config.username}:{config.password}@{config.host}/{config.database}"
+        engine = create_engine(url)
+
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+
+        return {"success": True}
+
+    except SQLAlchemyError as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/connect-db")
+def connect_db(config: DBConfig, user_id: int = Depends(get_current_user)):
+    try:
+        url = f"mysql+pymysql://{config.username}:{config.password}@{config.host}/{config.database}"
+        engine = create_engine(url)
+
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+
+        # ✅ SAVE IN DB
+        save_db_connection(user_id, config)
+
+        return {"success": True}
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/has-db")
+def has_db(user_id: int = Depends(get_current_user)):
+    db = get_db_connection(user_id)
+    return {"connected": bool(db)}
 
 
 # =========================
@@ -97,32 +152,36 @@ async def chat(req: QueryRequest, user_id: int = Depends(get_current_user)):
     try:
         session_id = req.session_id
 
-        # Ensure session exists for user
+        # 🔥 GET USER DB CONFIG
+        db_config = get_db_connection(user_id)
+
+        if not db_config:
+            raise HTTPException(status_code=400, detail="Database not connected")
+
+        db_url = f"mysql+pymysql://{db_config['username']}:{db_config['password']}@{db_config['host']}/{db_config['database']}"
+        user_engine = create_engine(db_url)
+
+        # Session
         create_session(session_id, user_id)
 
-        # Fetch history
         history = get_messages(session_id, user_id)[-6:]
 
-        # Schema
         schema = fetch_schema()
 
-        # Generate SQL
         sql_query = await generate_sql(req.question, schema, history)
 
         if not is_safe_query(sql_query):
             raise HTTPException(status_code=400, detail=f"Unsafe query: {sql_query}")
 
-        # Execute query
-        with engine.connect() as conn:
+        # Execute
+        with user_engine.connect() as conn:
             result = conn.execute(text(sql_query))
             rows = result.fetchall()
 
         data = [dict(row._mapping) for row in rows]
 
-        # Generate answer
         answer = await generate_answer(req.question, data, history)
 
-        # Save messages
         save_message(session_id, user_id, "user", req.question)
         save_message(session_id, user_id, "assistant", answer, sql_query)
 
